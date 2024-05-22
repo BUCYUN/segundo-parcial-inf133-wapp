@@ -10,12 +10,10 @@ user_bp = Blueprint("user", __name__)
 
 @user_bp.route("/")
 def index():
-    if current_user.is_authenticated:
-        return redirect(url_for("user.register", id=current_user.id))
     return redirect(url_for("user.login"))
 
 @user_bp.route("/users", methods=["GET", "POST"])
-@login_required
+#@login_required
 #@role_required("admin")
 def create_user():
     if request.method == "POST":
@@ -25,16 +23,15 @@ def create_user():
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash("El nombre de usuario ya está en uso", "error")
-            return redirect(url_for("patients.usuarios"))
+            return redirect(url_for("user.create_user"))
         user = User(username, password, role=role)
         user.set_password(password)
         user.save()
         flash("Usuario registrado exitosamente", "success")
-        return redirect(url_for("user.login"))
+        return redirect(url_for("user.create_user"))
     return user_view.register()
 
 @user_bp.route("/login", methods=["GET", "POST"])
-@login_required
 def login():
     if request.method == "POST":
         username = request.form["username"]
@@ -44,7 +41,7 @@ def login():
             login_user(user)
             flash("Inicio de sesión exitoso", "success")
             if user.has_role("admin"):
-                return redirect(url_for("patients.usuarios"))
+                return redirect(url_for("user.create_user"))
             else:
                 return redirect(url_for("user.login", id=user.id))
         else:
@@ -57,5 +54,7 @@ def logout():
     logout_user()
     flash("Sesión cerrada exitosamente", "success")
     return redirect(url_for("user.login"))
+
+
 
 
